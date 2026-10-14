@@ -124,6 +124,19 @@ type TemplateContext = {
   };
 };
 
+/**
+ * Checks if a template consists of a single statement block,
+ * e.g. `{% if %}...{% endif %}`, without any `${{ }}` interpolation inside of it.
+ */
+function isSingleStatementTemplate(value: string): boolean {
+  const trimmed = value.trim();
+  return (
+    trimmed.startsWith('{%') &&
+    trimmed.endsWith('%}') &&
+    !trimmed.includes('${{')
+  );
+}
+
 const isValidTaskSpec = (taskSpec: TaskSpec): taskSpec is TaskSpecV1beta3 => {
   return taskSpec.apiVersion === 'scaffolder.backstage.io/v1beta3';
 };
@@ -330,7 +343,20 @@ export class NunjucksWorkflowRunner implements WorkflowRunner {
     return JSON.parse(JSON.stringify(input), (_key, value) => {
       try {
         if (typeof value === 'string') {
-          return templateRenderer.renderValue(value, context);
+          const renderedValue = templateRenderer.renderValue(value, context);
+          if (
+            typeof renderedValue === 'string' &&
+            isSingleStatementTemplate(value)
+          ) {
+            // A lone statement block such as an `{% if %}` always renders to a
+            // string, so coerce it to its native data type such as boolean or number if possible.
+            try {
+              return JSON.parse(renderedValue);
+            } catch {
+              return renderedValue;
+            }
+          }
+          return renderedValue;
         }
       } catch {
         return value;
