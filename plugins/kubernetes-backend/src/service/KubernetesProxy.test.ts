@@ -23,7 +23,7 @@ import {
   ServiceFactoryTester,
 } from '@backstage/backend-test-utils';
 import { auditorServiceFactory } from '@backstage/backend-defaults/auditor';
-import { NotFoundError } from '@backstage/errors';
+import { ConflictError, NotFoundError } from '@backstage/errors';
 import { AuthorizeResult } from '@backstage/plugin-permission-common';
 import {
   ANNOTATION_KUBERNETES_AUTH_PROVIDER,
@@ -790,6 +790,43 @@ describe('KubernetesProxy', () => {
     await expect(
       proxy.createRequestHandler({ permissionApi })(req, res, next),
     ).rejects.toThrow(NotFoundError);
+  });
+
+  it('should return a ERROR_CONFLICT if multiple clusters share the selected name', async () => {
+    clusterSupplier.getClusters.mockResolvedValue([
+      {
+        name: 'cluster1',
+        url: 'https://localhost:9999',
+        authMetadata: {},
+      },
+      {
+        name: 'cluster1',
+        url: 'https://localhost:9998',
+        authMetadata: {},
+      },
+      {
+        name: 'cluster2',
+        url: 'https://localhost:9997',
+        authMetadata: {},
+      },
+    ]);
+
+    const { res, next } = getMockRes();
+
+    await expect(
+      proxy.createRequestHandler({ permissionApi })(
+        buildMockRequest('cluster1', 'api'),
+        res,
+        next,
+      ),
+    ).rejects.toThrow(ConflictError);
+    await expect(
+      proxy.createRequestHandler({ permissionApi })(
+        buildMockRequest('cluster1', 'api'),
+        res,
+        next,
+      ),
+    ).rejects.toThrow("Multiple clusters are named 'cluster1'");
   });
 
   it('should pass the exact response from Kubernetes', async () => {

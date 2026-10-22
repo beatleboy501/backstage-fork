@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {
+  ConflictError,
   ErrorResponseBody,
   ForwardedError,
   NotAllowedError,
@@ -405,7 +406,13 @@ export class KubernetesProxy {
     let cluster: ClusterDetails | undefined;
 
     if (hasClusterNameHeader) {
-      cluster = clusters.find(c => c.name === clusterName);
+      const matches = clusters.filter(c => c.name === clusterName);
+      if (matches.length > 1) {
+        throw new ConflictError(
+          `Multiple clusters are named '${clusterName}', unable to select one`,
+        );
+      }
+      cluster = matches.at(0);
     } else if (clusters.length === 1) {
       cluster = clusters.at(0);
     }
