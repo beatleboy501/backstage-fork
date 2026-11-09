@@ -15,7 +15,15 @@
  */
 import { ConfigReader } from '@backstage/config';
 import {
+  createMockDirectory,
+  registerMswTestHooks,
+} from '@backstage/backend-test-utils';
+import fs from 'fs-extra';
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+import {
   createConfluenceVariables,
+  getAndWriteAttachments,
   getAuthorizationHeaderValue,
   getConfluenceConfig,
 } from './helpers';
@@ -177,5 +185,59 @@ describe('getAuthorizationHeaderValue', () => {
 
     // Note: this is fake and just the encoded result
     expect(authHeaderValue).toEqual('Basic ZmFrZV91c2VyOmZha2VfcGFzc3dvcmQ=');
+  });
+});
+
+describe('getAndWriteAttachments', () => {
+  const baseUrl = 'https://nodomain.confluence.com';
+  const worker = setupServer();
+  registerMswTestHooks(worker);
+  const mockDir = createMockDirectory();
+  const config = {
+    baseUrl,
+    auth: 'bearer' as const,
+    token: 'fake_token',
+  };
+  const attachments = (name: string) =>
+    ({
+      results: [
+        {
+          title: name,
+          metadata: { mediaType: 'image/png' },
+          _links: { download: `/download/${name}` },
+        },
+      ],
+    } as any);
+
+  const openFdCount = () => fs.readdirSync('/proc/self/fd').length;
+
+  it('writes attachments without leaking file descriptors and rejects on stream errors', async () => {
+    worker.use(
+      http.get(`${baseUrl}/download/ok.png`, () => new HttpResponse('content')),
+      http.get(`${baseUrl}/download/broken.png`, () => {
+        const body = new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode('partial'));
+            controller.error(new Error('connection lost'));
+          },
+        });
+        return new HttpResponse(body);
+      }),
+    );
+    mockDir.setContent({ img: {} });
+
+    const before = openFdCount();
+    for (let i = 0; i < 10; i++) {
+      await getAndWriteAttachments(attachments('ok.png'), mockDir.path, config);
+    }
+    expect(fs.readFileSync(mockDir.resolve('img/ok.png'), 'utf8')).toBe(
+      'content',
+    );
+    expect(openFdCount()).toBeLessThanOrEqual(before);
+
+    await expect(
+      getAndWriteAttachments(attachments('broken.png'), mockDir.path, config),
+    ).rejects.toThrow('connection lost');
+    expect(openFdCount()).toBeLessThanOrEqual(before);
   });
 });
