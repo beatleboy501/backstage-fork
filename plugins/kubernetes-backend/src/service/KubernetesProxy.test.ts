@@ -813,20 +813,18 @@ describe('KubernetesProxy', () => {
 
     const { res, next } = getMockRes();
 
-    await expect(
-      proxy.createRequestHandler({ permissionApi })(
+    const error = await proxy
+      .createRequestHandler({ permissionApi })(
         buildMockRequest('cluster1', 'api'),
         res,
         next,
-      ),
-    ).rejects.toThrow(ConflictError);
-    await expect(
-      proxy.createRequestHandler({ permissionApi })(
-        buildMockRequest('cluster1', 'api'),
-        res,
-        next,
-      ),
-    ).rejects.toThrow("Multiple clusters are named 'cluster1'");
+      )
+      .catch(e => e);
+
+    expect(error).toBeInstanceOf(ConflictError);
+    expect(error.message).toBe(
+      "Multiple clusters are named 'cluster1', unable to select one",
+    );
   });
 
   it('should pass the exact response from Kubernetes', async () => {
