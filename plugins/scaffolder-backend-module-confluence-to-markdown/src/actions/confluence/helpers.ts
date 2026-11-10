@@ -168,10 +168,16 @@ export const getAndWriteAttachments = async (
         );
         // TODO(freben): This cast is sketchy, but for some reason the node types don't quite line up here
         // https://stackoverflow.com/questions/44672942/stream-response-to-file-using-fetch-api-and-fs-createwritestream/73879265#73879265
-        await pipeline(
-          Readable.fromWeb(res.body as any),
-          fs.createWriteStream(attachmentPath),
-        );
+        try {
+          await pipeline(
+            Readable.fromWeb(res.body as any),
+            fs.createWriteStream(attachmentPath),
+          );
+        } catch (error) {
+          // Don't leave a partially written attachment behind
+          await fs.remove(attachmentPath);
+          throw error;
+        }
       } else {
         throw new ConflictError(
           'No Body on the response. Can not save images from Confluence Doc',

@@ -209,9 +209,11 @@ describe('getAndWriteAttachments', () => {
       ],
     } as any);
 
-  const openFdCount = () => fs.readdirSync('/proc/self/fd').length;
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
-  it('writes attachments without leaking file descriptors and rejects on stream errors', async () => {
+  it('writes attachments, closes the file streams and cleans up after stream errors', async () => {
     worker.use(
       http.get(`${baseUrl}/download/ok.png`, () => new HttpResponse('content')),
       http.get(`${baseUrl}/download/broken.png`, () => {
@@ -226,18 +228,24 @@ describe('getAndWriteAttachments', () => {
     );
     mockDir.setContent({ img: {} });
 
-    const before = openFdCount();
-    for (let i = 0; i < 10; i++) {
-      await getAndWriteAttachments(attachments('ok.png'), mockDir.path, config);
-    }
+    const openSync = jest.spyOn(fs, 'openSync');
+    const createWriteStream = jest.spyOn(fs, 'createWriteStream');
+
+    await getAndWriteAttachments(attachments('ok.png'), mockDir.path, config);
     expect(fs.readFileSync(mockDir.resolve('img/ok.png'), 'utf8')).toBe(
       'content',
     );
-    expect(openFdCount()).toBeLessThanOrEqual(before);
 
     await expect(
       getAndWriteAttachments(attachments('broken.png'), mockDir.path, config),
     ).rejects.toThrow('connection lost');
-    expect(openFdCount()).toBeLessThanOrEqual(before);
+    expect(fs.existsSync(mockDir.resolve('img/broken.png'))).toBe(false);
+
+    // No stray descriptors are opened, and every stream that was created has been closed
+    expect(openSync).not.toHaveBeenCalled();
+    expect(createWriteStream).toHaveBeenCalledTimes(2);
+    for (const result of createWriteStream.mock.results) {
+      expect(result.value.destroyed).toBe(true);
+    }
   });
 });
