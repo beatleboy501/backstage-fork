@@ -26,6 +26,9 @@ const mockGitlabClient = {
     show: jest.fn(),
     create: jest.fn(),
   },
+  Namespaces: {
+    show: jest.fn(),
+  },
 };
 
 jest.mock('@gitbeaker/rest', () => ({

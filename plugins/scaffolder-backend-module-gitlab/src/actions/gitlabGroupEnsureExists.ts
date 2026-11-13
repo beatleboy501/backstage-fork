@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { InputError } from '@backstage/errors';
 import { ScmIntegrationRegistry } from '@backstage/integration';
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
 import { GroupSchema, CreateGroupOptions } from '@gitbeaker/rest';
@@ -115,6 +116,22 @@ export const createGitlabGroupEnsureExistsAction = (options: {
           }
         }
         if (!subGroup) {
+          // The first path segment may be a personal (user) namespace, which
+          // can't be created as a group but can be used as is.
+          if (i === 0) {
+            const userNamespace = await findUserNamespace(api, fullPath);
+            if (userNamespace) {
+              if (i < lastIndex) {
+                throw new InputError(
+                  `Cannot create subgroups in '${fullPath}' because it is a personal namespace`,
+                );
+              }
+              ctx.logger.info(`using existing personal namespace ${fullPath}`);
+              parentId = userNamespace.id;
+              currentPath = fullPath;
+              continue;
+            }
+          }
           ctx.logger.info(`creating missing group ${fullPath}`);
 
           parentId = await ctx.checkpoint({
@@ -139,6 +156,21 @@ export const createGitlabGroupEnsureExistsAction = (options: {
     },
   });
 };
+
+async function findUserNamespace(
+  api: ReturnType<typeof getClient>,
+  path: string,
+): Promise<{ id: number } | undefined> {
+  try {
+    const namespace = await api.Namespaces.show(path);
+    return namespace?.kind === 'user' ? namespace : undefined;
+  } catch (error: any) {
+    if (error.cause?.response?.status === 404) {
+      return undefined;
+    }
+    throw error;
+  }
+}
 
 type PathPart = { name: string; slug: string };
 type PathItem = string | PathPart;

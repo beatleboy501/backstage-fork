@@ -25,6 +25,9 @@ const mockGitlabClient = {
     show: jest.fn(),
     create: jest.fn(),
   },
+  Namespaces: {
+    show: jest.fn(),
+  },
 };
 
 jest.mock('@gitbeaker/rest', () => ({
@@ -89,6 +92,59 @@ describe('gitlab:group:ensureExists', () => {
     });
 
     expect(mockContext.output).toHaveBeenCalledWith('groupId', 3);
+  });
+
+  it('should reuse a personal namespace instead of creating a group', async () => {
+    mockGitlabClient.Groups.show.mockRejectedValue({
+      cause: { response: { status: 404 } },
+    });
+    mockGitlabClient.Namespaces.show.mockResolvedValue({
+      id: 7,
+      kind: 'user',
+      full_path: 'someone',
+    });
+
+    await action.handler({
+      ...mockContext,
+      input: {
+        repoUrl: 'gitlab.com?repo=repo&owner=owner',
+        path: ['someone'],
+      },
+    });
+
+    expect(mockGitlabClient.Namespaces.show).toHaveBeenCalledWith('someone');
+    expect(mockGitlabClient.Groups.create).not.toHaveBeenCalled();
+    expect(mockContext.output).toHaveBeenCalledWith('groupId', 7);
+
+    await expect(
+      action.handler({
+        ...mockContext,
+        input: {
+          repoUrl: 'gitlab.com?repo=repo&owner=owner',
+          path: ['someone', 'sub'],
+        },
+      }),
+    ).rejects.toThrow(/personal namespace/);
+    expect(mockGitlabClient.Groups.create).not.toHaveBeenCalled();
+
+    // A missing namespace still falls through to group creation
+    mockGitlabClient.Namespaces.show.mockRejectedValue({
+      cause: { response: { status: 404 } },
+    });
+    mockGitlabClient.Groups.create.mockResolvedValue({ id: 8 });
+    await action.handler({
+      ...mockContext,
+      input: {
+        repoUrl: 'gitlab.com?repo=repo&owner=owner',
+        path: ['newgroup'],
+      },
+    });
+    expect(mockGitlabClient.Groups.create).toHaveBeenCalledWith(
+      'newgroup',
+      'newgroup',
+      {},
+    );
+    expect(mockContext.output).toHaveBeenLastCalledWith('groupId', 8);
   });
 
   it('should only apply description to the last created group', async () => {
