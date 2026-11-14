@@ -30,8 +30,9 @@ The proxy will interpret the
 [`Backstage-Kubernetes-Cluster`](https://backstage.io/docs/reference/plugin-kubernetes-backend.header_kubernetes_cluster)
 header as the name of the cluster to target. This name will be compared to each cluster
 returned by all the configured [cluster locators](https://backstage.io/docs/features/kubernetes/configuration#clusterlocatormethods)
--- the first cluster whose [`name` field](https://backstage.io/docs/features/kubernetes/configuration#clustersname) matches
-the value in the header will be targeted.
+-- the cluster whose [`name` field](https://backstage.io/docs/features/kubernetes/configuration#clustersname) matches
+the value in the header will be targeted. If more than one cluster has that name, the proxy rejects the request with a
+conflict error, so make sure that each cluster has a unique name.
 
 Then the request will be forwarded to the cluster.
 
