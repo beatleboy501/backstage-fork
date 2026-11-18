@@ -8,9 +8,9 @@ Audience: Developers
 
 ## Overview
 
-Components can be created in the Software Catalog using software templates. Templates load skeletons of code, which can include some variables, and incorporate your company's best practices. The templates are published to a location, such as GitHub or GitLab.
+[Components](../references/glossary.md#component-catalog-plugin) can be created in the [Software Catalog](../references/glossary.md#software-catalog) using [software templates](../references/glossary.md#software-templates). Templates load skeletons of code, which can include some variables, and incorporate your company's best practices. The templates are published to a location, such as GitHub or GitLab.
 
-The standalone Backstage application includes the `Example Node.js Template`, which is an example template for the scaffolder that creates and registers a simple Node.js service. You can also [create your own templates](../features/software-templates/adding-templates.md).
+The standalone Backstage application includes the `Example Node.js Template`, which is an example template for the [scaffolder](../references/glossary.md#scaffolder) that creates and registers a simple Node.js service. You can also [create your own templates](../features/software-templates/adding-templates.md).
 
 ## Prerequisites
 
