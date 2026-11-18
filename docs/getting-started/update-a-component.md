@@ -8,7 +8,7 @@ Audience: Developers
 
 ## Overview
 
-Components in the Software Catalog are created using a software template. The template generates a `catalog-info.yaml` file in either GitHub or GitLab that defines the entity. To update the component, you must edit its corresponding `catalog-info.yaml` entity definition file.
+[Components](../references/glossary.md#component-catalog-plugin) in the [Software Catalog](../references/glossary.md#software-catalog) are created using a [software template](../references/glossary.md#software-templates). The template generates a `catalog-info.yaml` file in either GitHub or GitLab that defines the entity. To update the component, you must edit its corresponding `catalog-info.yaml` entity definition file.
 
 ## Updating the component
 

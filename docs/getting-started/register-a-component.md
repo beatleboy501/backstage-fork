@@ -7,7 +7,7 @@ description: Start populating your Backstage app with your data.
 Audience: Developers
 
 :::note
-Entity files are stored in YAML format, if you are not familiar with YAML, you can learn more about it [here](https://yaml.org).
+[Entity](../references/glossary.md#entity) files are stored in YAML format, if you are not familiar with YAML, you can learn more about it [here](https://yaml.org).
 
 [Descriptor Format of Catalog Entities](../features/software-catalog/descriptor-format.md) provides additional information on the format of the YAML entity files.
 :::
@@ -33,7 +33,7 @@ When registering a component, you can:
 
 ## Registering a component
 
-To manually register a component in the Software Catalog:
+To manually register a [component](../references/glossary.md#component-catalog-plugin) in the [Software Catalog](../references/glossary.md#software-catalog):
 
 1. Select `Create`.
 2. Select `REGISTER EXISTING COMPONENT`.

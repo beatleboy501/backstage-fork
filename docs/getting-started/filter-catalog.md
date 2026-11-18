@@ -8,7 +8,7 @@ Audience: All
 
 ## Overview
 
-The Catalog can be filtered by any combination of owner, kind, type, lifecycle, processing status, namespace, and name. [Catalog filters](../features/software-catalog/catalog-customization.md#catalog-filters) provides information on how to modify the available filter criteria.
+The [Catalog](../references/glossary.md#catalog) can be filtered by any combination of owner, [kind](../references/glossary.md#kind), type, lifecycle, processing status, [namespace](../references/glossary.md#namespace-catalog-plugin), and name. [Catalog filters](../features/software-catalog/catalog-customization.md#catalog-filters) provides information on how to modify the available filter criteria.
 
 ![Catalog filter options](../assets/uiguide/catalog-filter-options.png)
 

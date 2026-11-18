@@ -9,9 +9,9 @@ Audience: All
 
 ## Overview
 
-Initially, when you log into your standalone Backstage App, `Home` is selected in the sidebar, which displays the Catalog in the main panel.
+Initially, when you log into your standalone Backstage App, `Home` is selected in the sidebar, which displays the [Catalog](../references/glossary.md#catalog) in the main panel.
 
-There are four main entities that you should become familiar with:
+There are four main [entities](../references/glossary.md#entity) that you should become familiar with:
 
 - `Components` - Individual pieces of software that can be tracked in source control and can implement APIs for other components to consume.
 - `Resources` - The physical or virtual infrastructure needed to operate a component.

@@ -8,7 +8,7 @@ Audience: Developers
 
 ## Overview
 
-URLs to YAML files that you registered either using the `Create` button or by adding to your app-config file are both handled by entity providers.
+URLs to YAML files that you registered either using the `Create` button or by adding to your app-config file are both handled by entity providers, which add [entities](../references/glossary.md#entity) to the Catalog.
 
 [Implicit deletion](../features/software-catalog/life-of-an-entity.md#implicit-deletion) occurs when an entity provider issues a deletion of an entity. That entity, as well as the entire tree of entities processed out of it are considered for immediate deletion.
 

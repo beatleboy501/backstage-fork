@@ -19,7 +19,7 @@ Backstage plugins are primarily written using [TypeScript](https://www.typescrip
 
 ## Summary
 
-Backstage plugins customize the app for your needs. There is a
+Backstage [plugins](../references/glossary.md#plugin) customize the [app](../references/glossary.md#app) for your needs. There is a
 [plugin directory](https://backstage.io/plugins) with plugins for many common
 infrastructure needs - CI/CD, monitoring, auditing, and more.
 
