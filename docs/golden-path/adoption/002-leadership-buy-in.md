@@ -29,3 +29,30 @@ Step 4 and 5 are painful moments. Successful Backstage adoptions can lose steam 
 2. Define metrics around what you're looking to drive up/down. That may be time to onboarding a new engineer, time to production for a new service, time to mitigate incidents, etc. As we say above, this is the meaty problem that is unique to your company that solving will really move the needle.
 3. Lower the barrier to adoption. Many people see yet another YAML file as overhead. If you have an existing cataloging solution, use that to simplify the onboarding process. If you don't, this might be a good opportunity to do that work.
 4. Knowledge silos. Every team has preferences on how to do things. Centralizing that data into a single interface while letting teams continue to do things how they want to is a powerful goal and something that Backstage can make happen.
+
+## Pitch narrative template
+
+A short, clear narrative goes a long way. Fill in the blanks below, then trim it to fit a single page or a few slides. Use your own numbers and your own words. Leadership can tell when a pitch has been copied from somewhere else.
+
+1. **The problem today:** "Our developers spend `<amount of time>` on `<painful task>`, which costs us `<impact, such as delayed releases, incidents or onboarding time>`."
+2. **What Backstage changes:** "With Backstage, `<team or role>` can `<do the thing>` from one place, without `<the current blocker>`."
+3. **What we've already shown:** "In our proof of concept, `<N>` teams `<did something concrete>`, and `<a quote or number from a real user>`."
+4. **The cost:** "We need `<people and time>` to get to `<next milestone>`, and an ongoing `<people and time>` to keep it healthy."
+5. **How we'll measure success:** "We will track `<one or two metrics>` and report back in `<timeframe>`. If they haven't moved by then, we'll `<change course or stop>`."
+
+Keep the ask small and specific. It's much easier for leadership to say yes to funding the next milestone than to an open-ended commitment.
+
+## Example metrics
+
+Pick one or two metrics that match the problem you described in your pitch, and take a baseline measurement before you roll anything out. Without a baseline, you can't show that anything improved.
+
+| Metric                                   | What it tells you                                 | How to measure it                                                                                        |
+| ---------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Time to onboard a new engineer           | How quickly new hires become productive           | Survey new hires, or measure the time from start date to their first merged change.                      |
+| Time to first deployment of a service    | How much friction there is to creating a service  | Measure the time between creating a repository from a template and the first deployment to production.   |
+| Catalog coverage                         | How much of your software is discoverable         | Divide the number of components in the catalog by the number of repositories or services you expect.     |
+| Weekly active users                      | Whether people keep coming back                   | Use analytics for your portal, or the number of distinct users who sign in each week.                    |
+| Time to find an owner during an incident | How much faster incidents get to the right people | Compare incident timelines before and after, or ask on-call engineers how long it took to find an owner. |
+| Developer satisfaction                   | Whether developers feel the portal helps them     | Run a short recurring survey with the same questions each time.                                          |
+
+Be careful not to over-promise. Metrics such as onboarding time are affected by many things besides Backstage, so describe what you measured and avoid claiming that the portal alone caused a change.
