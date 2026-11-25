@@ -32,6 +32,14 @@ export function formatKey(key: string): string {
     .join(' > ');
 }
 
+/**
+ * Escapes a single property name for use as a JSON pointer segment, as
+ * described in RFC 6901.
+ */
+export function escapePointerSegment(segment: string): string {
+  return segment.replace(/~/g, '~0').replace(/\//g, '~1');
+}
+
 export function findSchemaForKey(
   key: string,
   schemas: ParsedTemplateSchema[],
@@ -63,7 +71,7 @@ export function findSchemaForKey(
 
     const draft = new JSONSchema(schema);
     const res = draft.getSchema({
-      pointer: `#/${key}`,
+      pointer: `#/${escapePointerSegment(key)}`,
       data,
     });
 

@@ -15,7 +15,7 @@
  */
 
 import { ReviewState } from './ReviewState';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ParsedTemplateSchema } from '../../hooks/useTemplateSchema';
 
 describe('ReviewState', () => {
@@ -670,5 +670,54 @@ describe('ReviewState', () => {
     expect(getByText('<hidden>')).toBeInTheDocument();
     expect(getByText('bob')).toBeInTheDocument();
     expect(getByText('github')).toBeInTheDocument();
+  });
+
+  it('masks, hides and labels fields whose names contain slashes', () => {
+    const formState = {
+      'api/token': 'secret-slash',
+      'my~field': 'visible-tilde',
+      'hidden/value': 'secret-hidden',
+      group: { 'nested/token': 'secret-nested', plain: 'ok' },
+    };
+    const schemas: ParsedTemplateSchema[] = [
+      {
+        mergedSchema: {
+          type: 'object',
+          properties: {
+            'api/token': {
+              type: 'string',
+              title: 'Slash token',
+              'ui:widget': 'password',
+            },
+            'my~field': { type: 'string', title: 'Tilde field' },
+            'hidden/value': {
+              type: 'string',
+              'ui:backstage': { review: { show: false } },
+            },
+            group: {
+              type: 'object',
+              properties: {
+                'nested/token': { type: 'string', 'ui:field': 'Secret' },
+                plain: { type: 'string' },
+              },
+            },
+          },
+        },
+        schema: {},
+        title: 'test',
+        uiSchema: {},
+      },
+    ];
+
+    render(<ReviewState formState={formState} schemas={schemas} />);
+
+    expect(screen.queryByText(/secret-/)).not.toBeInTheDocument();
+    expect(screen.getAllByText('******')).toHaveLength(2);
+    expect(screen.getByText('Slash token')).toBeInTheDocument();
+    expect(screen.queryByText('Api > Token')).not.toBeInTheDocument();
+    expect(screen.getByText('Tilde field')).toBeInTheDocument();
+    expect(screen.getByText('visible-tilde')).toBeInTheDocument();
+    expect(screen.queryByText(/hidden/i)).not.toBeInTheDocument();
+    expect(screen.getByText('ok')).toBeInTheDocument();
   });
 });
