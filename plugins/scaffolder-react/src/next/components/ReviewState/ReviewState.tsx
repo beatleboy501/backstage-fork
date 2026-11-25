@@ -17,7 +17,12 @@ import { StructuredMetadataTable } from '@backstage/core-components';
 import { JsonObject, JsonValue } from '@backstage/types';
 import { Draft07 as JSONSchema, JsonSchema } from 'json-schema-library';
 import { ParsedTemplateSchema } from '../../hooks/useTemplateSchema';
-import { isJsonObject, formatKey, findSchemaForKey } from './util';
+import {
+  isJsonObject,
+  formatKey,
+  findSchemaForKey,
+  escapePointerSegment,
+} from './util';
 
 /**
  * The props for the {@link ReviewState} component.
@@ -60,7 +65,7 @@ function getReviewOverride(
  * an array or unexploded object, as these are rendered as a single value.
  */
 function maskNestedValue(
-  key: string,
+  pointerPath: string,
   value: JsonValue,
   parsedSchema: JSONSchema,
   formState: JsonObject,
@@ -83,7 +88,7 @@ function maskNestedValue(
 
   if (Array.isArray(value)) {
     return value.flatMap((item, index) => {
-      const masked = maskChild(`${key}/${index}`, item);
+      const masked = maskChild(`${pointerPath}/${index}`, item);
       return masked === undefined ? [] : [masked];
     });
   }
@@ -97,7 +102,10 @@ function maskNestedValue(
     if (nestedValue === undefined) {
       continue;
     }
-    const masked = maskChild(`${key}/${nestedKey}`, nestedValue);
+    const masked = maskChild(
+      `${pointerPath}/${escapePointerSegment(nestedKey)}`,
+      nestedValue,
+    );
     if (masked !== undefined) {
       result[nestedKey] = masked;
     }
@@ -106,21 +114,22 @@ function maskNestedValue(
 }
 
 function processSchema(
-  key: string,
+  segments: string[],
   value: JsonValue | undefined,
   schema: ParsedTemplateSchema,
   formState: JsonObject,
 ): [string, JsonValue | undefined][] {
+  const pointerPath = segments.map(escapePointerSegment).join('/');
   const parsedSchema = new JSONSchema(schema.mergedSchema);
   const definitionInSchema = parsedSchema.getSchema({
-    pointer: `#/${key}`,
+    pointer: `#/${pointerPath}`,
     data: formState,
   });
 
   const name =
     definitionInSchema?.['ui:backstage']?.review?.name ??
     definitionInSchema?.title ??
-    formatKey(key);
+    formatKey(segments.join('/'));
 
   if (definitionInSchema) {
     const backstageReviewOptions = definitionInSchema['ui:backstage']?.review;
@@ -146,13 +155,15 @@ function processSchema(
     if (backstageReviewOptions?.explode !== false && isJsonObject(value)) {
       // Recurse nested objects
       return Object.entries(value).flatMap(([nestedKey, nestedValue]) =>
-        processSchema(`${key}/${nestedKey}`, nestedValue, schema, formState),
+        processSchema([...segments, nestedKey], nestedValue, schema, formState),
       );
     }
   }
 
   if (Array.isArray(value) || isJsonObject(value)) {
-    return [[name, maskNestedValue(key, value, parsedSchema, formState)]];
+    return [
+      [name, maskNestedValue(pointerPath, value, parsedSchema, formState)],
+    ];
   }
 
   return [[name, value]];
@@ -169,7 +180,7 @@ export const ReviewState = (props: ReviewStateProps) => {
       .flatMap(([key, value]) => {
         const schema = findSchemaForKey(key, props.schemas, schemaFormState);
         return schema
-          ? processSchema(key, value, schema, schemaFormState)
+          ? processSchema([key], value, schema, schemaFormState)
           : [[formatKey(key), value]];
       })
       .filter(prop => prop.length > 0),
